@@ -9,6 +9,10 @@ class ColorBar
   CRGB *leds;
   uint16_t distance;
   uint16_t step;
+  uint16_t redZone;
+  uint16_t yellowZone;
+  uint16_t greenZone;
+  uint16_t scaleSize;
   uint16_t ledCount;
   uint16_t minDistance;
   uint16_t maxDistance;
@@ -26,7 +30,13 @@ class ColorBar
     this->minDistance = minDistance;
     this->maxDistance = maxDistance;
     brightness = defaultBrightness;
-    step = (maxDistance - minDistance) / (3 * ledCount);
+    scaleSize = ledCount * 3;
+    step = (maxDistance - minDistance) / scaleSize;
+    Serial.print("Step size: ");
+    Serial.println(step);
+    redZone = ledCount;
+    yellowZone = ledCount * 2;
+    greenZone = scaleSize;
     setBrightness(defaultBrightness);
 
     if(step <= 0)
@@ -53,18 +63,30 @@ class ColorBar
 
   void display()
   {
-      uint16_t distanceSteps = distance / step;
+      uint16_t distanceSteps = 0;
+      if(distance >= minDistance)
+      {
+        distanceSteps = (distance-minDistance) / step;
+      }
+      Serial.print("Distance steps calculated: ");
+      Serial.println(distanceSteps);
       CRGB color;
-      CRGB backgroundColor;
-      if(distanceSteps < ledCount)
+      CRGB backgroundColor = CRGB::Black;
+      if(distanceSteps <= redZone)
       {
         color = colorRed;
-        backgroundColor = colorYellow;
       }
-      else if (distanceSteps < (2 * ledCount))
+      else if (distanceSteps <= yellowZone)
       {
         color = colorYellow;
-        backgroundColor = colorGreen;
+        backgroundColor = colorRed;
+        distanceSteps -= redZone;
+      }
+      else if (distanceSteps < greenZone)
+      {
+        color = colorGreen;
+        backgroundColor = colorYellow;
+        distanceSteps -= yellowZone;
       }
       else
       {
@@ -77,19 +99,16 @@ class ColorBar
         leds[i] = backgroundColor;
       }
       
-      if(distanceSteps >= (3 * ledCount - 1))
+      if(distanceSteps >= greenZone)
       {
         for(int i = 0; i < ledCount; i++)
         {
-          leds[i] = CRGB::Black;
+          leds[i] = colorGreen;
         }
-        leds[0] = colorGreen;
       }
       else
       {
-        uint8_t mod = distanceSteps % ledCount;
-        
-        for(int i = ledCount - mod; i >= 0; i--)
+        for(int i = 0; i < distanceSteps; i++)
         {
           leds[i] = color;
         }
