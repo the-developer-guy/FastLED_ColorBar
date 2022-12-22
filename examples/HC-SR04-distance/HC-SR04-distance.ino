@@ -42,7 +42,7 @@ unsigned long endTimestamp;
 unsigned long distance;
 unsigned long triggerSchedule = 0;
 
-ColorBar colorBar(ledCount, ledPin, minDistance, maxDistance);
+ColorBar<ledPin> colorBar(ledCount, minDistance, maxDistance);
  
 void setup() {
   pinMode(trigPin, OUTPUT);
